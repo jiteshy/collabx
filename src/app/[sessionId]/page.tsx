@@ -13,7 +13,6 @@ import { EditorHeader } from '@/components/EditorHeader';
 import { Footer } from '@/components/Footer';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { SessionFullDialog } from '@/components/ui/SessionFullDialog';
-import { Button } from '@/components/ui/button';
 
 export default function SessionPage() {
   const params = useParams();
@@ -21,8 +20,6 @@ export default function SessionPage() {
   const [username, setUsername] = useState<string | null>(null);
   const { language, setLanguage } = useEditorStore();
   const users = useUserStore(state => state.users);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isReadOnly, setIsReadOnly] = useState(false);
   const { sendMessage, isSessionFull, setIsSessionFull } = useWebSocket(sessionId, username || '');
 
   useEffect(() => {
@@ -47,7 +44,6 @@ export default function SessionPage() {
   };
 
   const handleViewReadOnly = () => {
-    setIsReadOnly(true);
     setIsSessionFull(false);
   };
 
@@ -87,8 +83,7 @@ export default function SessionPage() {
                 setLanguage={setLanguage}
                 users={users}
                 username={username}
-                setIsHovered={setIsHovered}
-                readOnly={isReadOnly}
+                readOnly={isSessionFull}
               />
 
               <div className="flex-1">
@@ -96,7 +91,7 @@ export default function SessionPage() {
                   sessionId={sessionId}
                   username={username}
                   sendMessage={sendMessage}
-                  readOnly={isReadOnly}
+                  readOnly={isSessionFull}
                 />
               </div>
             </div>
@@ -108,7 +103,6 @@ export default function SessionPage() {
       <SessionFullDialog
         isOpen={isSessionFull}
         onClose={() => setIsSessionFull(false)}
-        sessionId={sessionId}
         onViewReadOnly={handleViewReadOnly}
       />
     </div>

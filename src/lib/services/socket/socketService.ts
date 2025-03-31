@@ -106,7 +106,7 @@ export class SocketService {
     this.isDisconnecting = false;
   }
 
-  sendMessage(type: MessageType, payload: any) {
+  sendMessage(type: MessageType, payload: { content: string }) {
     if (!this.socket?.connected) {
       console.warn('Socket not connected, message not sent');
       return;
@@ -149,7 +149,7 @@ export class SocketService {
 
   private handleConnectionError(error: Error) {
     this.isConnecting = false;
-    this.onError('Connection error occurred');
+    this.onError('Connection error occurred. Error: ' + error.message);
     this.disconnect();
   }
 

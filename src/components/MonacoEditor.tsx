@@ -3,27 +3,23 @@
 import { useEffect, useRef } from 'react';
 import Editor, { EditorProps, loader } from '@monaco-editor/react';
 import type { editor as MonacoEditorType } from 'monaco-editor';
-import { useEditorStore, useUserStore } from '@/lib/stores';
-import { DEFAULT_CONTENT, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@/lib/utils';
+import { useEditorStore } from '@/lib/stores';
+import { DEFAULT_CONTENT, DEFAULT_LANGUAGE } from '@/lib/utils';
 import { MessageType } from '@/types';
 import { useTheme } from 'next-themes';
 
 interface MonacoEditorProps {
   sessionId: string;
   username: string;
-  sendMessage: (type: MessageType, payload: any) => void;
+  sendMessage: (type: MessageType, payload: { content: string }) => void;
   readOnly?: boolean;
 }
 
 export function MonacoEditor({
-  sessionId,
-  username,
   sendMessage,
   readOnly = false,
 }: MonacoEditorProps) {
-  const { content, language, setContent, setLanguage, setError } = useEditorStore();
-
-  const { cursors, selections } = useUserStore();
+  const { content, language, setContent } = useEditorStore();
 
   const { theme } = useTheme();
 
@@ -63,7 +59,7 @@ export function MonacoEditor({
     }
   }, []);
 
-  const handleEditorDidMount = (editor: any) => {
+  const handleEditorDidMount = (editor: MonacoEditorType.IStandaloneCodeEditor) => {
     editorRef.current = editor;
   };
 
@@ -72,11 +68,6 @@ export function MonacoEditor({
       setContent(value);
       sendMessage(MessageType.CONTENT_CHANGE, { content: value });
     }
-  };
-
-  const handleLanguageChange = (value: string) => {
-    setLanguage(value);
-    sendMessage(MessageType.LANGUAGE_CHANGE, { language: value });
   };
 
   const editorProps: EditorProps = {

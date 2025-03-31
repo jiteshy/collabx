@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { SocketService } from '@/services/socket';
+import { SocketService } from '@/lib/services/socket';
 import { useEditorStore } from '@/lib/stores/editorStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import { MessageType } from '@/types';
@@ -72,7 +72,7 @@ export const useWebSocket = (sessionId: string, username: string) => {
     };
   }, [sessionId, username, handleError, storeHandlers]);
 
-  const sendMessage = useCallback((type: MessageType, payload: any) => {
+  const sendMessage = useCallback((type: MessageType, payload: { content: string }) => {
     if (socketServiceRef.current) {
       socketServiceRef.current.sendMessage(type, payload);
     }

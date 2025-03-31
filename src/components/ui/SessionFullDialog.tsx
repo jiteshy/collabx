@@ -14,14 +14,12 @@ import { useEditorStore } from '@/lib/stores/editorStore';
 interface SessionFullDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  sessionId: string;
   onViewReadOnly: () => void;
 }
 
 export function SessionFullDialog({
   isOpen,
   onClose,
-  sessionId,
   onViewReadOnly,
 }: SessionFullDialogProps) {
   const router = useRouter();

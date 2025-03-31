@@ -53,7 +53,7 @@ export enum MessageType {
 
 export interface WebSocketMessage {
   type: MessageType;
-  payload: any;
+  payload: { content: string };
   sessionId: string;
   timestamp: number;
   user?: {

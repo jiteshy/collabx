@@ -15,7 +15,6 @@ interface EditorHeaderProps {
   username: string;
   readOnly: boolean;
   setLanguage: (value: string) => void;
-  setIsHovered: (value: boolean) => void;
 }
 
 export function EditorHeader({
@@ -23,7 +22,6 @@ export function EditorHeader({
   users,
   username,
   readOnly,
-  setIsHovered,
   setLanguage,
 }: EditorHeaderProps) {
   return (
@@ -47,7 +45,7 @@ export function EditorHeader({
 
       <div className="flex -space-x-2">
         <AnimatePresence>
-          {users.map((user, index) => (
+          {users.map((user) => (
             <motion.div
               key={user.id}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -55,8 +53,6 @@ export function EditorHeader({
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2 }}
               className="relative group"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
             >
               <div
                 className="w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-xs text-white shadow-sm transition-all duration-200 hover:scale-110 hover:z-10"
