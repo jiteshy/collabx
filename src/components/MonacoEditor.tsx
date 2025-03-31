@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 import Editor, { EditorProps, loader } from '@monaco-editor/react';
 import type { editor as MonacoEditorType } from 'monaco-editor';
@@ -5,33 +7,6 @@ import { useEditorStore, useUserStore } from '@/lib/stores';
 import { DEFAULT_CONTENT, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '@/lib/utils';
 import { MessageType } from '@/types';
 import { useTheme } from 'next-themes';
-
-// Initialize monaco loader
-loader.init().then(monaco => {
-  monaco.editor.defineTheme('custom-theme', {
-    base: 'vs',
-    inherit: true,
-    rules: [],
-    colors: {
-      'editor.background': '#ffffff',
-      'editorGutter.background': '#f4f4f5',
-      'editorLineNumber.foreground': '#9f9fa9',
-      'editorLineNumber.activeForeground': '#52525c',
-    },
-  });
-
-  monaco.editor.defineTheme('custom-dark-theme', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [],
-    colors: {
-      'editor.background': '#18181b',
-      'editorGutter.background': '#27272a',
-      'editorLineNumber.foreground': '#52525c',
-      'editorLineNumber.activeForeground': '#9f9fa9',
-    },
-  });
-});
 
 interface MonacoEditorProps {
   sessionId: string;
@@ -53,6 +28,34 @@ export function MonacoEditor({
   const { theme } = useTheme();
 
   const editorRef = useRef<MonacoEditorType.IStandaloneCodeEditor | null>(null);
+  
+  useEffect(() => {
+    loader.init().then(monaco => {
+      monaco.editor.defineTheme('custom-theme', {
+        base: 'vs',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editor.background': '#ffffff',
+          'editorGutter.background': '#f4f4f5',
+          'editorLineNumber.foreground': '#9f9fa9',
+          'editorLineNumber.activeForeground': '#52525c',
+        },
+      });
+    
+      monaco.editor.defineTheme('custom-dark-theme', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editor.background': '#18181b',
+          'editorGutter.background': '#27272a',
+          'editorLineNumber.foreground': '#52525c',
+          'editorLineNumber.activeForeground': '#9f9fa9',
+        },
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (editorRef.current) {
