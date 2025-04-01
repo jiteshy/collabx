@@ -156,6 +156,9 @@ export class SocketService {
   private handleError(payload: { message: string; type?: string }) {
     if (payload.type === 'SESSION_FULL') {
       this.storeHandlers.onSessionFull();
+    } else if (payload.type === 'DUPLICATE_USERNAME') {
+      this.onError('Username is already taken. Please choose a different username.');
+      this.storeHandlers.setError('Username is already taken. Please choose a different username.');
     } else {
       this.onError(payload.message);
       this.storeHandlers.setError(payload.message);

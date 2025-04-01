@@ -19,6 +19,7 @@ export default function SessionPage() {
   const sessionId = params.sessionId as string;
   const [username, setUsername] = useState<string | null>(null);
   const { language, setLanguage } = useEditorStore();
+  const [readOnly, setReadOnly] = useState(false);
   const users = useUserStore(state => state.users);
   const { sendMessage, isSessionFull, setIsSessionFull } = useWebSocket(sessionId, username || '');
 
@@ -45,6 +46,7 @@ export default function SessionPage() {
 
   const handleViewReadOnly = () => {
     setIsSessionFull(false);
+    setReadOnly(true);
   };
 
   return (
@@ -83,7 +85,7 @@ export default function SessionPage() {
                 setLanguage={setLanguage}
                 users={users}
                 username={username}
-                readOnly={isSessionFull}
+                readOnly={readOnly}
               />
 
               <div className="flex-1">
@@ -91,7 +93,7 @@ export default function SessionPage() {
                   sessionId={sessionId}
                   username={username}
                   sendMessage={sendMessage}
-                  readOnly={isSessionFull}
+                  readOnly={readOnly}
                 />
               </div>
             </div>

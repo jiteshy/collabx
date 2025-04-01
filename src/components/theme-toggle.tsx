@@ -8,6 +8,23 @@ import { Toggle } from '@/components/ui/toggle';
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
+  // Get the icons by their unique class combinations
+  const sunIcon = (
+    <Sun 
+      className="rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" 
+      role="img"
+      aria-hidden="true"
+    />
+  );
+  
+  const moonIcon = (
+    <Moon 
+      className="absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" 
+      role="img"
+      aria-hidden="true"
+    />
+  );
+
   return (
     <Toggle
       className="cursor-pointer"
@@ -18,8 +35,8 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       title="Toggle theme"
     >
-      <Sun className="rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      {sunIcon}
+      {moonIcon}
     </Toggle>
   );
 }

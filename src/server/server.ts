@@ -9,45 +9,31 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
-  const server = createServer((req, res) => {
-    const parsedUrl = parse(req.url!, true);
-    handle(req, res, parsedUrl);
-  });
+// Store sessions with their users
+const sessions = new Map<
+  string,
+  {
+    id: string;
+    content: string;
+    language: string;
+    lastActive: number;
+    users: Map<
+      number,
+      {
+        id: number;
+        username: string;
+        color: string;
+        lastActive: number;
+        sessionId: string;
+      }
+    >;
+  }
+>();
 
-  const io = new SocketIOServer(server, {
-    path: '/api/ws',
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
-  });
+let currentUserId = 1;
+const MAX_USERS_PER_SESSION = 5;
 
-  // Store sessions with their users
-  const sessions = new Map<
-    string,
-    {
-      id: string;
-      content: string;
-      language: string;
-      lastActive: number;
-      users: Map<
-        number,
-        {
-          id: number;
-          username: string;
-          color: string;
-          lastActive: number;
-          sessionId: string;
-        }
-      >;
-    }
-  >();
-
-  let currentUserId = 1;
-  const MAX_USERS_PER_SESSION = 5;
-
+export function setupSocketServer(io: SocketIOServer) {
   io.on('connection', socket => {
     const sessionId = socket.handshake.query.sessionId as string;
 
@@ -70,6 +56,13 @@ app.prepare().then(() => {
           users: new Map(),
         };
         sessions.set(sessionId, session);
+      }
+
+      // Check for duplicate username
+      if (Array.from(session.users.values()).some(user => user.username === payload.username)) {
+        socket.emit(MessageType.ERROR, { message: 'Username already taken', type: 'DUPLICATE_USERNAME' });
+        socket.disconnect();
+        return;
       }
 
       // Check if session is full
@@ -201,6 +194,24 @@ app.prepare().then(() => {
       }
     });
   });
+}
+
+app.prepare().then(() => {
+  const server = createServer((req, res) => {
+    const parsedUrl = parse(req.url!, true);
+    handle(req, res, parsedUrl);
+  });
+
+  const io = new SocketIOServer(server, {
+    path: '/api/ws',
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+  });
+
+  setupSocketServer(io);
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   server.listen(port, () => {
