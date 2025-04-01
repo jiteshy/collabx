@@ -1,6 +1,7 @@
 import { Manager } from 'socket.io-client';
 import { MessageType } from '@/types';
 import type { SocketPayloads, SocketEvents, StoreHandlers, SocketConnectionState } from './types';
+import { NotificationService } from '../notification/notificationService';
 
 export class SocketService {
   private socket: ReturnType<typeof Manager.prototype.socket> | null = null;
@@ -204,12 +205,14 @@ export class SocketService {
   private handleUserJoined(payload: SocketPayloads[MessageType.USER_JOINED]): void {
     if (payload?.user) {
       this.storeHandlers.addUser(payload.user);
+      NotificationService.showUserJoined(payload.user.username);
     }
   }
 
   private handleUserLeft(payload: SocketPayloads[MessageType.USER_LEFT]): void {
     if (payload?.user?.id) {
       this.storeHandlers.removeUser(payload.user.id);
+      NotificationService.showUserLeft(payload.user.username);
     }
   }
 

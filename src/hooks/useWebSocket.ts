@@ -3,6 +3,7 @@ import { SocketService } from '@/lib/services/socket';
 import { useEditorStore } from '@/lib/stores/editorStore';
 import { useUserStore } from '@/lib/stores/userStore';
 import { MessageType } from '@/types';
+import { SocketPayloads } from '@/lib/services/socket/types';
 
 export const useWebSocket = (sessionId: string, username: string) => {
   const socketServiceRef = useRef<SocketService | null>(null);
@@ -74,7 +75,7 @@ export const useWebSocket = (sessionId: string, username: string) => {
 
   const sendMessage = useCallback((type: MessageType, payload: { content: string }) => {
     if (socketServiceRef.current) {
-      socketServiceRef.current.sendMessage(type, payload);
+      socketServiceRef.current.sendMessage(type, payload as SocketPayloads[MessageType]);
     }
   }, []);
 
