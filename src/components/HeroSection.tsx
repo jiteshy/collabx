@@ -14,7 +14,8 @@ export function HeroSection() {
         Edit code, notes or any text together in real-time.
       </p>
       <p className="text-zinc-400 text-base lg:text-lg leading-relaxed">
-        <span className="text-zinc-200 font-bold1">NO sign-up</span>, just share the link and start
+        <span className="text-zinc-200 font-bold1">NO sign-up</span>, just share the link and start{' '}
+        <br />
         collaborating.
       </p>
     </div>

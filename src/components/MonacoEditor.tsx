@@ -1,12 +1,44 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import Editor, { EditorProps, loader } from '@monaco-editor/react';
+import { useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import type { editor as MonacoEditorType } from 'monaco-editor';
+import type { EditorProps } from '@monaco-editor/react';
 import { useEditorStore } from '@/lib/stores';
 import { DEFAULT_CONTENT, DEFAULT_LANGUAGE } from '@/lib/utils';
 import { MessageType } from '@/types';
 import { useTheme } from 'next-themes';
+import { EditorShimmer } from './EditorShimmer';
+
+// Dynamically import Monaco editor
+const Editor = dynamic(() => import('@monaco-editor/react').then((mod) => mod.Editor), {
+  ssr: false,
+});
+
+// Memoize theme definitions
+const lightTheme: MonacoEditorType.IStandaloneThemeData = {
+  base: 'vs' as const,
+  inherit: true,
+  rules: [] as MonacoEditorType.ITokenThemeRule[],
+  colors: {
+    'editor.background': '#ffffff',
+    'editorGutter.background': '#f4f4f5',
+    'editorLineNumber.foreground': '#9f9fa9',
+    'editorLineNumber.activeForeground': '#52525c',
+  },
+};
+
+const darkTheme: MonacoEditorType.IStandaloneThemeData = {
+  base: 'vs-dark' as const,
+  inherit: true,
+  rules: [] as MonacoEditorType.ITokenThemeRule[],
+  colors: {
+    'editor.background': '#18181b',
+    'editorGutter.background': '#27272a',
+    'editorLineNumber.foreground': '#52525c',
+    'editorLineNumber.activeForeground': '#9f9fa9',
+  },
+};
 
 interface MonacoEditorProps {
   sessionId: string;
@@ -15,40 +47,16 @@ interface MonacoEditorProps {
   readOnly?: boolean;
 }
 
-export function MonacoEditor({
-  sendMessage,
-  readOnly = false,
-}: MonacoEditorProps) {
+export function MonacoEditor({ sendMessage, readOnly = false }: MonacoEditorProps) {
   const { content, language, setContent } = useEditorStore();
-
   const { theme } = useTheme();
-
   const editorRef = useRef<MonacoEditorType.IStandaloneCodeEditor | null>(null);
-  
+
   useEffect(() => {
-    loader.init().then(monaco => {
-      monaco.editor.defineTheme('custom-theme', {
-        base: 'vs',
-        inherit: true,
-        rules: [],
-        colors: {
-          'editor.background': '#ffffff',
-          'editorGutter.background': '#f4f4f5',
-          'editorLineNumber.foreground': '#9f9fa9',
-          'editorLineNumber.activeForeground': '#52525c',
-        },
-      });
-    
-      monaco.editor.defineTheme('custom-dark-theme', {
-        base: 'vs-dark',
-        inherit: true,
-        rules: [],
-        colors: {
-          'editor.background': '#18181b',
-          'editorGutter.background': '#27272a',
-          'editorLineNumber.foreground': '#52525c',
-          'editorLineNumber.activeForeground': '#9f9fa9',
-        },
+    import('@monaco-editor/react').then(({ loader }) => {
+      loader.init().then((monaco) => {
+        monaco.editor.defineTheme('custom-theme', lightTheme);
+        monaco.editor.defineTheme('custom-dark-theme', darkTheme);
       });
     });
   }, []);
@@ -59,30 +67,25 @@ export function MonacoEditor({
     }
   }, []);
 
-  const handleEditorDidMount = (editor: MonacoEditorType.IStandaloneCodeEditor) => {
+  const handleEditorDidMount = useCallback((editor: MonacoEditorType.IStandaloneCodeEditor) => {
     editorRef.current = editor;
-  };
+  }, []);
 
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      setContent(value);
-      sendMessage(MessageType.CONTENT_CHANGE, { content: value });
-    }
-  };
+  const handleEditorChange = useCallback(
+    (value: string | undefined) => {
+      if (value !== undefined) {
+        setContent(value);
+        sendMessage(MessageType.CONTENT_CHANGE, { content: value });
+      }
+    },
+    [sendMessage, setContent],
+  );
 
-  const editorProps: EditorProps = {
-    height: '100%',
-    defaultLanguage: DEFAULT_LANGUAGE,
-    defaultValue: DEFAULT_CONTENT,
-    value: content,
-    language: language,
-    theme: theme === 'dark' ? 'custom-dark-theme' : 'custom-theme',
-    onMount: handleEditorDidMount,
-    onChange: handleEditorChange,
-    options: {
+  const editorOptions = useMemo(
+    (): MonacoEditorType.IStandaloneEditorConstructionOptions => ({
       minimap: { enabled: false },
       fontSize: 14,
-      lineNumbers: 'on',
+      lineNumbers: 'on' as const,
       scrollBeyondLastLine: false,
       automaticLayout: true,
       wordWrap: 'on',
@@ -95,7 +98,6 @@ export function MonacoEditor({
       selectOnLineNumbers: true,
       lineNumbersMinChars: 4,
       lineDecorationsWidth: 0,
-      // renderLineHighlight: 'none',
       scrollbar: {
         vertical: 'visible',
         horizontal: 'visible',
@@ -104,8 +106,40 @@ export function MonacoEditor({
         horizontalScrollbarSize: 10,
         arrowSize: 30,
       },
-    },
-  };
+      folding: true,
+      foldingStrategy: 'auto',
+      renderLineHighlight: 'none',
+      hideCursorInOverviewRuler: true,
+      overviewRulerBorder: false,
+      overviewRulerLanes: 0,
+      largeFileOptimizations: true,
+      bracketPairColorization: {
+        enabled: false,
+      },
+      renderValidationDecorations: 'on',
+      renderFinalNewline: 'off',
+      renderLineHighlightOnlyWhenFocus: true,
+      fastScrollSensitivity: 5,
+      mouseWheelScrollSensitivity: 1,
+      maxTokenizationLineLength: 20000,
+    }),
+    [],
+  );
+
+  const editorProps = useMemo<EditorProps>(
+    () => ({
+      height: '100%',
+      defaultLanguage: DEFAULT_LANGUAGE,
+      defaultValue: DEFAULT_CONTENT,
+      value: content,
+      language: language,
+      theme: theme === 'dark' ? 'custom-dark-theme' : 'custom-theme',
+      onMount: handleEditorDidMount,
+      onChange: handleEditorChange,
+      options: editorOptions,
+    }),
+    [content, language, theme, handleEditorDidMount, handleEditorChange, editorOptions],
+  );
 
   useEffect(() => {
     if (editorRef.current) {
@@ -113,7 +147,7 @@ export function MonacoEditor({
         readOnly,
         minimap: { enabled: false },
         fontSize: 14,
-        lineNumbers: 'on',
+        lineNumbers: 'on' as const,
         roundedSelection: false,
         scrollBeyondLastLine: false,
         automaticLayout: true,
@@ -130,7 +164,9 @@ export function MonacoEditor({
 
   return (
     <div className="h-full w-full">
-      <Editor {...editorProps} />
+      <Suspense fallback={<EditorShimmer />}>
+        <Editor {...editorProps} />
+      </Suspense>
     </div>
   );
 }
