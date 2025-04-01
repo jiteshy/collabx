@@ -13,18 +13,13 @@ import { useEditorStore } from '@/lib/stores/editorStore';
 
 interface SessionFullDialogProps {
   isOpen: boolean;
-  onClose: () => void;
   onViewReadOnly: () => void;
 }
 
-export function SessionFullDialog({
-  isOpen,
-  onClose,
-  onViewReadOnly,
-}: SessionFullDialogProps) {
+export function SessionFullDialog({ isOpen, onViewReadOnly }: SessionFullDialogProps) {
   const router = useRouter();
-  const resetUser = useUserStore(state => state.reset);
-  const resetEditor = useEditorStore(state => state.reset);
+  const resetUser = useUserStore((state) => state.reset);
+  const resetEditor = useEditorStore((state) => state.reset);
 
   const handleCreateNewSession = () => {
     // Reset stores
@@ -37,20 +32,20 @@ export function SessionFullDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onViewReadOnly}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Session Full</DialogTitle>
+          <DialogTitle>Session is Full</DialogTitle>
           <DialogDescription>
-            This session has reached its maximum capacity. You can view it in read-only mode or
-            create a new session.
+            This session has reached the maximum number of active collaborators. You can either
+            create a new session or view this one in read-only mode.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onViewReadOnly}>
-            View in Read-Only Mode
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCreateNewSession}>
+            Create New Session
           </Button>
-          <Button onClick={handleCreateNewSession}>Create New Session</Button>
+          <Button onClick={onViewReadOnly}>View in Read-Only Mode</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

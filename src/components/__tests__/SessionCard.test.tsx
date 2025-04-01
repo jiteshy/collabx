@@ -56,15 +56,15 @@ describe('SessionCard', () => {
 
   it('displays user information correctly', () => {
     render(<SessionCard {...defaultProps} />);
-    
+
     // Check active collaborators count
     const count = screen.getByText('(2/5)');
     expect(count).toBeDefined();
-    
+
     // Check user avatars and roles
     const avatars = document.querySelectorAll('div[style*="background-color"]');
     expect(avatars.length).toBe(2);
-    
+
     // Check user labels
     const currentUser = screen.getByText('testuser');
     const currentUserIdentifier = screen.getByText('(You)');
@@ -79,36 +79,40 @@ describe('SessionCard', () => {
   describe('Edge Cases', () => {
     it('handles empty users array', () => {
       render(<SessionCard {...defaultProps} users={[]} />);
-      
+
       const count = screen.getByText('(0/5)');
       expect(count).toBeDefined();
-      
+
       const avatars = document.querySelectorAll('div[style*="background-color"]');
       expect(avatars.length).toBe(0);
     });
 
     it('handles long usernames', () => {
       const longUsername = 'a'.repeat(50);
-      const usersWithLongName = [{
-        ...mockUsers[0],
-        username: longUsername,
-      }];
-      
+      const usersWithLongName = [
+        {
+          ...mockUsers[0],
+          username: longUsername,
+        },
+      ];
+
       render(<SessionCard {...defaultProps} users={usersWithLongName} />);
-      
+
       const username = screen.getByText(`${longUsername}`);
       expect(username).toBeDefined();
     });
 
     it('handles special characters in usernames', () => {
       const specialUsername = 'user@#$%^&*()';
-      const usersWithSpecialName = [{
-        ...mockUsers[0],
-        username: specialUsername,
-      }];
-      
+      const usersWithSpecialName = [
+        {
+          ...mockUsers[0],
+          username: specialUsername,
+        },
+      ];
+
       render(<SessionCard {...defaultProps} users={usersWithSpecialName} />);
-      
+
       const username = screen.getByText(`${specialUsername}`);
       expect(username).toBeDefined();
     });
@@ -117,23 +121,23 @@ describe('SessionCard', () => {
   describe('Performance', () => {
     it('renders efficiently', () => {
       const startTime = performance.now();
-      
+
       render(<SessionCard {...defaultProps} />);
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(100); // Should render within 100ms
     });
 
     it('handles rapid re-renders efficiently', () => {
       const startTime = performance.now();
-      
+
       const { rerender } = render(<SessionCard {...defaultProps} />);
       for (let i = 0; i < 100; i++) {
         rerender(<SessionCard {...defaultProps} />);
       }
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(1000); // Should handle 100 re-renders within 1s
     });
   });
-}); 
+});

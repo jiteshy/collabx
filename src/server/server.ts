@@ -34,7 +34,7 @@ let currentUserId = 1;
 const MAX_USERS_PER_SESSION = 5;
 
 export function setupSocketServer(io: SocketIOServer) {
-  io.on('connection', socket => {
+  io.on('connection', (socket) => {
     const sessionId = socket.handshake.query.sessionId as string;
 
     if (!sessionId) {
@@ -59,8 +59,11 @@ export function setupSocketServer(io: SocketIOServer) {
       }
 
       // Check for duplicate username
-      if (Array.from(session.users.values()).some(user => user.username === payload.username)) {
-        socket.emit(MessageType.ERROR, { message: 'Username already taken', type: 'DUPLICATE_USERNAME' });
+      if (Array.from(session.users.values()).some((user) => user.username === payload.username)) {
+        socket.emit(MessageType.ERROR, {
+          message: 'Username already taken',
+          type: 'DUPLICATE_USERNAME',
+        });
         socket.disconnect();
         return;
       }
@@ -173,7 +176,7 @@ export function setupSocketServer(io: SocketIOServer) {
             });
           }
         }
-      }
+      },
     );
 
     socket.on('disconnect', () => {

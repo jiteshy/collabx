@@ -11,14 +11,14 @@ interface EditorState {
   reset: () => void;
 }
 
-export const useEditorStore = create<EditorState>(set => ({
+export const useEditorStore = create<EditorState>((set) => ({
   content: DEFAULT_CONTENT,
   language: DEFAULT_LANGUAGE,
   error: null,
 
-  setContent: content => set({ content }),
-  setLanguage: language => set({ language }),
-  setError: error => set({ error }),
+  setContent: (content) => set({ content }),
+  setLanguage: (language) => set({ language }),
+  setError: (error) => set({ error }),
 
   reset: () =>
     set({

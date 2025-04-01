@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MonacoEditor } from '@/components/MonacoEditor';
 import { useEditorStore, useUserStore } from '@/lib/stores';
@@ -13,26 +13,23 @@ import { EditorHeader } from '@/components/EditorHeader';
 import { Footer } from '@/components/Footer';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { SessionFullDialog } from '@/components/ui/SessionFullDialog';
-
+import { useTheme } from 'next-themes';
 export default function SessionPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const [username, setUsername] = useState<string | null>(null);
   const { language, setLanguage } = useEditorStore();
   const [readOnly, setReadOnly] = useState(false);
-  const users = useUserStore(state => state.users);
+  const users = useUserStore((state) => state.users);
   const { sendMessage, isSessionFull, setIsSessionFull } = useWebSocket(sessionId, username || '');
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     const randomUsername = getRandomUsername();
     setUsername(randomUsername);
   }, []);
 
-  if (!username) {
-    return null;
-  }
-
-  const copySessionLink = () => {
+  const copySessionLink = useCallback(() => {
     const url = `${window.location.origin}/${sessionId}`;
     navigator.clipboard
       .writeText(url)
@@ -42,7 +39,30 @@ export default function SessionPage() {
       .catch(() => {
         toast.error('Failed to copy session link');
       });
-  };
+  }, [sessionId]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Copy Session Link: Cmd/Ctrl + Shift + C
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'c') {
+        event.preventDefault();
+        copySessionLink();
+      }
+
+      // Toggle Dark Mode: Cmd/Ctrl + Shift + D
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'l') {
+        event.preventDefault();
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [copySessionLink, setTheme, theme]);
+
+  if (!username) {
+    return null;
+  }
 
   const handleViewReadOnly = () => {
     setIsSessionFull(false);
@@ -102,11 +122,7 @@ export default function SessionPage() {
       </div>
 
       <Footer />
-      <SessionFullDialog
-        isOpen={isSessionFull}
-        onClose={() => setIsSessionFull(false)}
-        onViewReadOnly={handleViewReadOnly}
-      />
+      <SessionFullDialog isOpen={isSessionFull} onViewReadOnly={handleViewReadOnly} />
     </div>
   );
 }

@@ -61,11 +61,28 @@ export function MonacoEditor({ sendMessage, readOnly = false }: MonacoEditorProp
     });
   }, []);
 
-  useEffect(() => {
+  const focusEditor = useCallback(() => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    focusEditor();
+  }, [focusEditor]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Jump to Editor: Cmd/Ctrl + Shift + E
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'e') {
+        event.preventDefault();
+        focusEditor();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusEditor]);
 
   const handleEditorDidMount = useCallback((editor: MonacoEditorType.IStandaloneCodeEditor) => {
     editorRef.current = editor;

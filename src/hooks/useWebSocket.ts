@@ -15,7 +15,7 @@ export const useWebSocket = (sessionId: string, username: string) => {
       console.error('Socket error:', message);
       setError(message);
     },
-    [setError]
+    [setError],
   );
 
   // Create store handlers once
@@ -42,7 +42,7 @@ export const useWebSocket = (sessionId: string, username: string) => {
       updateCursor,
       updateSelection,
       resetUser,
-    ]
+    ],
   );
 
   useEffect(() => {

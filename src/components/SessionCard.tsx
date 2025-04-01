@@ -10,6 +10,24 @@ interface SessionCardProps {
   copySessionLink: () => void;
 }
 
+function CollaboratorShimmer() {
+  return (
+    <div className="flex items-center justify-between px-2 py-1 rounded-lg">
+      <div className="flex items-center space-x-2 lg:space-x-3">
+        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-zinc-200 dark:bg-zinc-700 animate-pulse" />
+        <div className="flex flex-col space-y-1">
+          <div className="h-3 w-24 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+          <div className="h-2 w-16 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+        </div>
+      </div>
+      <div className="flex items-center space-x-1.5 lg:space-x-2">
+        <div className="h-1.5 w-1.5 lg:h-2 lg:w-2 rounded-full bg-zinc-200 dark:bg-zinc-700 animate-pulse" />
+        <div className="h-2 w-12 bg-zinc-200 dark:bg-zinc-700 rounded animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 export function SessionCard({ sessionId, username, users, copySessionLink }: SessionCardProps) {
   return (
     <div className="bg-zinc-100 w-full h-[220px] overflow-auto scrollbar-hide lg:h-auto rounded-lg p-3 lg:p-4 shadow-sm border border-zinc-200 lg:mb-6 dark:bg-zinc-800 dark:border-zinc-700">
@@ -48,42 +66,48 @@ export function SessionCard({ sessionId, username, users, copySessionLink }: Ses
 
         <div className="space-y-1.5 lg:space-y-2">
           <AnimatePresence>
-            {users.map(user => (
-              <motion.div
-                key={user.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center justify-between px-2 py-1 rounded-lg transition-colors duration-200"
-              >
-                <div className="flex items-center space-x-2 lg:space-x-3">
-                  <div
-                    className="w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs text-white"
-                    style={{ backgroundColor: user.color }}
-                  >
-                    {user.username[0].toUpperCase()}
+            {users.length === 0 ? (
+              <>
+                <CollaboratorShimmer />
+              </>
+            ) : (
+              users.map((user) => (
+                <motion.div
+                  key={user.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-between px-2 py-1 rounded-lg transition-colors duration-200"
+                >
+                  <div className="flex items-center space-x-2 lg:space-x-3">
+                    <div
+                      className="w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs text-white"
+                      style={{ backgroundColor: user.color }}
+                    >
+                      {user.username[0].toUpperCase()}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs lg:text-sm font-medium text-slate-900 dark:text-zinc-200">
+                        {user.username}
+                        {user.username === username && (
+                          <span className="ml-1 text-orange-600">(You)</span>
+                        )}
+                      </span>
+                      <span className="text-[10px] lg:text-xs text-slate-500 dark:text-zinc-400">
+                        {user.username === username ? 'Current User' : 'Collaborator'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs lg:text-sm font-medium text-slate-900 dark:text-zinc-200">
-                      {user.username}
-                      {user.username === username && (
-                        <span className="ml-1 text-orange-600">(You)</span>
-                      )}
-                    </span>
+                  <div className="flex items-center space-x-1.5 lg:space-x-2">
+                    <Circle className="h-1.5 w-1.5 lg:h-2 lg:w-2 text-green-500 fill-green-500" />
                     <span className="text-[10px] lg:text-xs text-slate-500 dark:text-zinc-400">
-                      {user.username === username ? 'Current User' : 'Collaborator'}
+                      Active
                     </span>
                   </div>
-                </div>
-                <div className="flex items-center space-x-1.5 lg:space-x-2">
-                  <Circle className="h-1.5 w-1.5 lg:h-2 lg:w-2 text-green-500 fill-green-500" />
-                  <span className="text-[10px] lg:text-xs text-slate-500 dark:text-zinc-400">
-                    Active
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </AnimatePresence>
         </div>
       </div>

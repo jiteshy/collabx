@@ -8,13 +8,13 @@ interface SessionState {
   reset: () => void;
 }
 
-export const useSessionStore = create<SessionState>(set => ({
+export const useSessionStore = create<SessionState>((set) => ({
   currentSession: null,
 
-  setCurrentSession: session => set({ currentSession: session }),
+  setCurrentSession: (session) => set({ currentSession: session }),
 
   updateSessionActivity: () => {
-    set(state => {
+    set((state) => {
       if (!state.currentSession) return state;
       return {
         currentSession: {
