@@ -5,6 +5,7 @@ import { expect } from '@jest/globals';
 
 // Mock the Monaco editor
 jest.mock('@monaco-editor/react', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const Editor = ({ onMount, onChange, value, options, theme, language }: any) => {
     // Call onMount with a mock editor instance
     if (onMount) {
@@ -73,10 +74,10 @@ describe('MonacoEditor', () => {
 
   it('renders the editor with initial content', () => {
     render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-    
+
     const editor = screen.getByTestId('monaco-editor');
     expect(editor).toBeDefined();
-    
+
     const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
     expect(textarea.value).toBe('const test = "hello";');
     expect(textarea.dataset.language).toBe('javascript');
@@ -85,10 +86,10 @@ describe('MonacoEditor', () => {
 
   it('handles content changes', () => {
     render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-    
+
     const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'const test = "updated";' } });
-    
+
     expect(mockStore.setContent).toHaveBeenCalledWith('const test = "updated";');
     expect(mockSendMessage).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, {
       content: 'const test = "updated";',
@@ -97,19 +98,19 @@ describe('MonacoEditor', () => {
 
   it('updates content when store changes', () => {
     const { rerender } = render(
-      <MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />
+      <MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />,
     );
-    
+
     mockStore.content = 'const test = "new content";';
     rerender(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-    
+
     const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
     expect(textarea.value).toBe('const test = "new content";');
   });
 
   it('applies correct theme based on system theme', () => {
     render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-    
+
     const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
     expect(textarea.dataset.theme).toBe('custom-theme');
   });
@@ -117,54 +118,56 @@ describe('MonacoEditor', () => {
   describe('Editor Features', () => {
     // it('handles language changes', () => {
     //   const { rerender } = render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
     //   // Trigger language change through the store
     //   mockStore.setLanguage('python');
     //   mockStore.language = 'python';
     //   rerender(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
     //   const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
     //   expect(textarea.dataset.language).toBe('python');
-      
     //   expect(mockSendMessage).toHaveBeenCalledWith(MessageType.LANGUAGE_CHANGE, { language: 'python' });
     // });
   });
 
   describe('Theme Integration', () => {
     it('applies light theme', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
         theme: 'light',
         setTheme: jest.fn(),
       }));
 
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       expect(textarea.dataset.theme).toBe('custom-theme');
     });
 
     it('applies dark theme', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
         theme: 'dark',
         setTheme: jest.fn(),
       }));
 
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       expect(textarea.dataset.theme).toBe('custom-dark-theme');
     });
 
     it('handles theme changes', () => {
-      const { rerender } = render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+      const { rerender } = render(
+        <MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
         theme: 'dark',
         setTheme: jest.fn(),
       }));
-      
+
       rerender(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       expect(textarea.dataset.theme).toBe('custom-dark-theme');
     });
@@ -174,9 +177,9 @@ describe('MonacoEditor', () => {
     it('handles large content', () => {
       const largeContent = 'a'.repeat(1000000);
       mockStore.content = largeContent;
-      
+
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       expect(textarea.value).toBe(largeContent);
     });
@@ -184,22 +187,22 @@ describe('MonacoEditor', () => {
     it('handles special characters', () => {
       const specialContent = 'const test = "特殊字符";';
       mockStore.content = specialContent;
-      
+
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       expect(textarea.value).toBe(specialContent);
     });
 
     it('handles concurrent edits', () => {
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
-      
+
       // Simulate concurrent edits
       fireEvent.change(textarea, { target: { value: 'edit 1' } });
       fireEvent.change(textarea, { target: { value: 'edit 2' } });
-      
+
       expect(mockStore.setContent).toHaveBeenCalledTimes(2);
       expect(mockSendMessage).toHaveBeenCalledTimes(2);
     });
@@ -208,14 +211,14 @@ describe('MonacoEditor', () => {
   describe('Performance', () => {
     it('handles rapid content changes efficiently', () => {
       const startTime = performance.now();
-      
+
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const textarea = screen.getByTestId('editor-textarea') as HTMLTextAreaElement;
       for (let i = 0; i < 100; i++) {
         fireEvent.change(textarea, { target: { value: `content ${i}` } });
       }
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(1000); // Should handle 100 changes within 1s
     });
@@ -224,11 +227,11 @@ describe('MonacoEditor', () => {
       const startTime = performance.now();
       const largeContent = 'a'.repeat(100000);
       mockStore.content = largeContent;
-      
+
       render(<MonacoEditor sessionId="test" username="testuser" sendMessage={mockSendMessage} />);
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(500); // Should load large file within 500ms
     });
   });
-}); 
+});

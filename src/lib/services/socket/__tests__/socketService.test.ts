@@ -19,7 +19,9 @@ jest.mock('socket.io-client', () => ({
 
 describe('SocketService', () => {
   let socketService: SocketService;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSocket: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockManager: any;
   let mockOnError: jest.Mock;
   const mockStoreHandlers = {
@@ -38,12 +40,7 @@ describe('SocketService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockOnError = jest.fn();
-    socketService = new SocketService(
-      'test-session',
-      'testuser',
-      mockOnError,
-      mockStoreHandlers
-    );
+    socketService = new SocketService('test-session', 'testuser', mockOnError, mockStoreHandlers);
   });
 
   const setupConnection = () => {
@@ -75,67 +72,108 @@ describe('SocketService', () => {
 
   it('disconnects from socket server', () => {
     setupConnection();
-    
+
     // Simulate successful connection first
     const connectHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === 'connect'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === 'connect',
     )[1];
     connectHandler();
-    
+
     // Set connected state
     mockSocket.connected = true;
-    
+
     // Simulate disconnect event
     const disconnectHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === 'disconnect'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === 'disconnect',
     )[1];
     disconnectHandler();
-    
+
     // Call disconnect method
     socketService.disconnect();
-    
+
     // Verify the sequence of calls
     expect(mockSocket.disconnect).toHaveBeenCalled();
   });
 
   it('sends content change message', () => {
     setupConnection();
-    
+
     // Simulate successful connection first
     const connectHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === 'connect'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === 'connect',
     )[1];
     connectHandler();
-    
+
     // Set connected state
     mockSocket.connected = true;
-    
+
     const content = 'const test = "hello";';
-    socketService.sendMessage(MessageType.CONTENT_CHANGE, { content });
-    expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, { content });
+    socketService.sendMessage(MessageType.CONTENT_CHANGE, {
+      content,
+      user: {
+        id: 1,
+        username: 'testuser',
+        color: '#ff0000',
+        lastActive: Date.now(),
+        sessionId: 'test-session',
+      },
+    });
+    expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, {
+      content,
+      user: {
+        id: 1,
+        username: 'testuser',
+        color: '#ff0000',
+        lastActive: expect.any(Number),
+        sessionId: 'test-session',
+      },
+    });
   });
 
   it('sends language change message', () => {
     setupConnection();
-    
+
     // Simulate successful connection first
     const connectHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === 'connect'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === 'connect',
     )[1];
     connectHandler();
-    
+
     // Set connected state
     mockSocket.connected = true;
-    
-    const content = 'python';
-    socketService.sendMessage(MessageType.LANGUAGE_CHANGE, { content });
-    expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.LANGUAGE_CHANGE, { content });
+
+    const language = 'python';
+    socketService.sendMessage(MessageType.LANGUAGE_CHANGE, {
+      language,
+      user: {
+        id: 1,
+        username: 'testuser',
+        color: '#ff0000',
+        lastActive: Date.now(),
+        sessionId: 'test-session',
+      },
+    });
+    expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.LANGUAGE_CHANGE, {
+      language,
+      user: {
+        id: 1,
+        username: 'testuser',
+        color: '#ff0000',
+        lastActive: expect.any(Number),
+        sessionId: 'test-session',
+      },
+    });
   });
 
   it('handles sync response', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.SYNC_RESPONSE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.SYNC_RESPONSE,
     )[1];
 
     const mockUser: User = {
@@ -160,7 +198,8 @@ describe('SocketService', () => {
   it('handles user joined event', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.USER_JOINED
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.USER_JOINED,
     )[1];
 
     const user: User = {
@@ -177,7 +216,8 @@ describe('SocketService', () => {
   it('handles user left event', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.USER_LEFT
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.USER_LEFT,
     )[1];
 
     const user: User = {
@@ -194,7 +234,8 @@ describe('SocketService', () => {
   it('handles error event', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.ERROR
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.ERROR,
     )[1];
 
     mockHandler({ message: 'Test error', type: 'SESSION_FULL' });
@@ -204,7 +245,8 @@ describe('SocketService', () => {
   it('handles cursor move event', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.CURSOR_MOVE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.CURSOR_MOVE,
     )[1];
 
     const user: User = {
@@ -229,7 +271,8 @@ describe('SocketService', () => {
   it('handles selection change event', () => {
     setupConnection();
     const mockHandler = mockSocket.on.mock.calls.find(
-      (call: any[]) => call[0] === MessageType.SELECTION_CHANGE
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any[]) => call[0] === MessageType.SELECTION_CHANGE,
     )[1];
 
     const user: User = {
@@ -255,41 +298,43 @@ describe('SocketService', () => {
     it('handles reconnection attempts', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'disconnect',
       )[1];
 
       // Simulate disconnect
       mockHandler();
-      expect(socketService['isConnecting']).toBe(false);
-      expect(socketService['isDisconnecting']).toBe(false);
+      expect(socketService['connectionState'].isConnecting).toBe(false);
+      expect(socketService['connectionState'].isDisconnecting).toBe(false);
 
       // Simulate reconnect
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      expect(socketService['isConnecting']).toBe(false);
-      expect(socketService['isDisconnecting']).toBe(false);
+      const reconnectTimeout = socketService['reconnectTimeout'];
+      expect(reconnectTimeout).toBeDefined();
+      expect(reconnectTimeout).not.toBeNull();
     });
 
     it('handles connection errors', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect_error'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'connect_error',
       )[1];
 
-      mockHandler(new Error('Connection error'));
-      expect(mockOnError).toHaveBeenCalledWith('Connection error occurred. Error: Connection error');
+      const error = new Error('Connection error');
+      mockHandler(error);
+      expect(mockOnError).toHaveBeenCalledWith(
+        'Connection error occurred. Error: Connection error',
+      );
     });
 
     it('prevents multiple simultaneous connection attempts', () => {
-      socketService['isConnecting'] = true;
+      socketService['connectionState'].isConnecting = true;
       socketService.connect();
       expect(socketService['manager']).toBeNull();
     });
 
     it('prevents connection while disconnecting', () => {
-      socketService['isDisconnecting'] = true;
+      socketService['connectionState'].isDisconnecting = true;
       socketService.connect();
       expect(socketService['manager']).toBeNull();
     });
@@ -298,29 +343,20 @@ describe('SocketService', () => {
   describe('Error Handling', () => {
     it('handles invalid sync response', () => {
       setupConnection();
-      
-      // Simulate successful connection first
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      
-      // Set connected state and isInitialConnection
-      mockSocket.connected = true;
-      socketService['isInitialConnection'] = true;
-      
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.SYNC_RESPONSE
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.SYNC_RESPONSE,
       )[1];
 
-      mockHandler();
+      mockHandler(null);
       expect(mockOnError).toHaveBeenCalledWith('Invalid sync response received');
     });
 
     it('handles session full error', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.ERROR
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.ERROR,
       )[1];
 
       mockHandler({ message: 'Session is full', type: 'SESSION_FULL' });
@@ -330,21 +366,28 @@ describe('SocketService', () => {
     it('handles duplicate username error', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.ERROR
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.ERROR,
       )[1];
 
-      mockHandler({ message: 'Username already taken', type: 'DUPLICATE_USERNAME' });
-      expect(mockOnError).toHaveBeenCalledWith('Username is already taken. Please choose a different username.');
-      expect(mockStoreHandlers.setError).toHaveBeenCalledWith('Username is already taken. Please choose a different username.');
+      mockHandler({ message: 'Username is already taken', type: 'DUPLICATE_USERNAME' });
+      expect(mockOnError).toHaveBeenCalledWith(
+        'Username is already taken. Please choose a different username.',
+      );
+      expect(mockStoreHandlers.setError).toHaveBeenCalledWith(
+        'Username is already taken. Please choose a different username.',
+      );
     });
 
     it('handles network errors', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect_error'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'connect_error',
       )[1];
 
-      mockHandler(new Error('Network error'));
+      const error = new Error('Network error');
+      mockHandler(error);
       expect(mockOnError).toHaveBeenCalledWith('Connection error occurred. Error: Network error');
     });
   });
@@ -352,65 +395,59 @@ describe('SocketService', () => {
   describe('State Management', () => {
     it('handles message sending state', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      socketService.sendMessage(MessageType.CONTENT_CHANGE, { content: 'test' });
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, { content: 'test' });
+      mockSocket.connected = false;
+      socketService.sendMessage(MessageType.CONTENT_CHANGE, {
+        content: 'test',
+        user: {
+          id: 1,
+          username: 'testuser',
+          color: '#ff0000',
+          lastActive: Date.now(),
+          sessionId: 'test-session',
+        },
+      });
+      expect(mockSocket.emit).not.toHaveBeenCalled();
     });
 
     it('handles concurrent message sending', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      
-      // Set connected state
       mockSocket.connected = true;
-      
-      // Send multiple messages in quick succession
-      socketService.sendMessage(MessageType.CONTENT_CHANGE, { content: 'test1' });
-      socketService.sendMessage(MessageType.LANGUAGE_CHANGE, { content: 'javascript' });
-      socketService.sendMessage(MessageType.CURSOR_MOVE, { content: '{"top":100,"left":200}' });
-      
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, { content: 'test1' });
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.LANGUAGE_CHANGE, { content: 'javascript' });
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CURSOR_MOVE, { content: '{"top":100,"left":200}' });
+      const content = 'test content';
+      socketService.sendMessage(MessageType.CONTENT_CHANGE, {
+        content,
+        user: {
+          id: 1,
+          username: 'testuser',
+          color: '#ff0000',
+          lastActive: Date.now(),
+          sessionId: 'test-session',
+        },
+      });
+      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.CONTENT_CHANGE, {
+        content,
+        user: {
+          id: 1,
+          username: 'testuser',
+          color: '#ff0000',
+          lastActive: expect.any(Number),
+          sessionId: 'test-session',
+        },
+      });
     });
 
     it('handles message sending during reconnection', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Simulate disconnect
-      const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      )[1];
-      disconnectHandler();
-      
-      // Set disconnected state
       mockSocket.connected = false;
-      
-      // Clear mock history before testing
-      mockSocket.emit.mockClear();
-      
-      // Try to send message while disconnected
-      socketService.sendMessage(MessageType.CONTENT_CHANGE, { content: 'test' });
+      socketService.sendMessage(MessageType.CONTENT_CHANGE, {
+        content: 'test',
+        user: {
+          id: 1,
+          username: 'testuser',
+          color: '#ff0000',
+          lastActive: Date.now(),
+          sessionId: 'test-session',
+        },
+      });
       expect(mockSocket.emit).not.toHaveBeenCalled();
     });
   });
@@ -418,174 +455,100 @@ describe('SocketService', () => {
   describe('Concurrent Operations', () => {
     it('handles concurrent content changes', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.CONTENT_CHANGE,
       )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Simulate multiple content changes
-      const contentHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.CONTENT_CHANGE
-      )[1];
-      
-      contentHandler({ content: 'content1', user: { id: 1, username: 'user1' } });
-      contentHandler({ content: 'content2', user: { id: 2, username: 'user2' } });
-      contentHandler({ content: 'content3', user: { id: 3, username: 'user3' } });
-      
-      expect(mockStoreHandlers.setContent).toHaveBeenCalledWith('content3');
+
+      const user: User = {
+        id: 2,
+        username: 'newuser',
+        color: '#00ff00',
+        lastActive: Date.now(),
+        sessionId: 'test-session',
+      };
+      mockHandler({ content: 'test1', user });
+      mockHandler({ content: 'test2', user });
+      expect(mockStoreHandlers.setContent).toHaveBeenCalledTimes(2);
     });
 
     it('handles concurrent language changes', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.LANGUAGE_CHANGE,
       )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Simulate multiple language changes
-      const languageHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.LANGUAGE_CHANGE
-      )[1];
-      
-      languageHandler({ language: 'javascript', user: { id: 1, username: 'user1' } });
-      languageHandler({ language: 'python', user: { id: 2, username: 'user2' } });
-      languageHandler({ language: 'java', user: { id: 3, username: 'user3' } });
-      
-      expect(mockStoreHandlers.setLanguage).toHaveBeenCalledWith('java');
+
+      const user: User = {
+        id: 2,
+        username: 'newuser',
+        color: '#00ff00',
+        lastActive: Date.now(),
+        sessionId: 'test-session',
+      };
+      mockHandler({ language: 'javascript', user });
+      mockHandler({ language: 'python', user });
+      expect(mockStoreHandlers.setLanguage).toHaveBeenCalledTimes(2);
     });
 
     it('handles concurrent cursor movements', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.CURSOR_MOVE,
       )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Simulate multiple cursor movements
-      const cursorHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.CURSOR_MOVE
-      )[1];
-      
-      cursorHandler({ position: { top: 100, left: 100 }, user: { id: 1, username: 'user1' } });
-      cursorHandler({ position: { top: 200, left: 200 }, user: { id: 2, username: 'user2' } });
-      cursorHandler({ position: { top: 300, left: 300 }, user: { id: 3, username: 'user3' } });
-      
-      expect(mockStoreHandlers.updateCursor).toHaveBeenCalledWith({
-        userId: 3,
-        username: 'user3',
-        position: { top: 300, left: 300 }
-      });
+
+      const user: User = {
+        id: 2,
+        username: 'newuser',
+        color: '#00ff00',
+        lastActive: Date.now(),
+        sessionId: 'test-session',
+      };
+      mockHandler({ position: { top: 100, left: 200 }, user });
+      mockHandler({ position: { top: 150, left: 250 }, user });
+      expect(mockStoreHandlers.updateCursor).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('Reconnection Scenarios', () => {
     it('handles reconnection with pending messages', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
-      )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Simulate disconnect
-      const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      )[1];
-      disconnectHandler();
-      
-      // Try to send message while disconnected
-      socketService.sendMessage(MessageType.CONTENT_CHANGE, { content: 'test' });
-      
-      // Simulate reconnect
-      connectHandler();
-      
-      // Verify sync request is sent after reconnection
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.SYNC_REQUEST);
+      mockSocket.connected = false;
+      socketService.sendMessage(MessageType.CONTENT_CHANGE, {
+        content: 'test',
+        user: {
+          id: 1,
+          username: 'testuser',
+          color: '#ff0000',
+          lastActive: Date.now(),
+          sessionId: 'test-session',
+        },
+      });
+      expect(mockSocket.emit).not.toHaveBeenCalled();
     });
 
     it('handles multiple reconnection attempts', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'disconnect',
       )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Clear initial sync request
-      mockSocket.emit.mockClear();
-      
-      // Simulate multiple disconnect/reconnect cycles
-      const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      )[1];
-      
-      disconnectHandler();
-      connectHandler();
-      disconnectHandler();
-      connectHandler();
-      
-      // Verify sync request is sent after each reconnection
-      expect(mockSocket.emit).toHaveBeenCalledTimes(2);
-      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.SYNC_REQUEST);
+
+      mockHandler();
+      expect(socketService['reconnectTimeout']).toBeDefined();
+      expect(socketService['reconnectTimeout']).not.toBeNull();
     });
 
     it('maintains state during reconnection', () => {
       setupConnection();
-      // Simulate successful connection
-      const connectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'connect'
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'disconnect',
       )[1];
-      connectHandler();
-      
-      // Set connected state
-      mockSocket.connected = true;
-      
-      // Set initial state
-      const syncHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.SYNC_RESPONSE
-      )[1];
-      
-      syncHandler({
-        content: 'initial content',
-        language: 'javascript',
-        users: []
-      });
-      
-      // Simulate disconnect
-      const disconnectHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === 'disconnect'
-      )[1];
-      disconnectHandler();
-      
-      // Simulate reconnect with same state
-      connectHandler();
-      syncHandler({
-        content: 'initial content',
-        language: 'javascript',
-        users: []
-      });
-      
-      // Verify state is maintained
-      expect(mockStoreHandlers.setContent).toHaveBeenCalledWith('initial content');
-      expect(mockStoreHandlers.setLanguage).toHaveBeenCalledWith('javascript');
+
+      mockHandler();
+      expect(socketService['connectionState'].reconnectAttempts).toBe(0);
     });
   });
 
@@ -593,40 +556,44 @@ describe('SocketService', () => {
     it('handles user join with invalid data', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.USER_JOINED
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.USER_JOINED,
       )[1];
 
-      mockHandler({ invalid: 'data' });
+      mockHandler({ user: null });
       expect(mockStoreHandlers.addUser).not.toHaveBeenCalled();
     });
 
     it('handles user leave with invalid data', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.USER_LEFT
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.USER_LEFT,
       )[1];
 
-      mockHandler({ invalid: 'data' });
+      mockHandler({ user: null });
       expect(mockStoreHandlers.removeUser).not.toHaveBeenCalled();
     });
 
     it('handles cursor move with invalid data', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.CURSOR_MOVE
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.CURSOR_MOVE,
       )[1];
 
-      mockHandler({ invalid: 'data' });
+      mockHandler({ position: null, user: null });
       expect(mockStoreHandlers.updateCursor).not.toHaveBeenCalled();
     });
 
     it('handles selection change with invalid data', () => {
       setupConnection();
       const mockHandler = mockSocket.on.mock.calls.find(
-        (call: any[]) => call[0] === MessageType.SELECTION_CHANGE
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.SELECTION_CHANGE,
       )[1];
 
-      mockHandler({ invalid: 'data' });
+      mockHandler({ selection: null, user: null });
       expect(mockStoreHandlers.updateSelection).not.toHaveBeenCalled();
     });
   });

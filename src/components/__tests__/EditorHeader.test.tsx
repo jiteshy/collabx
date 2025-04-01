@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { EditorHeader } from '../EditorHeader';
 import { User } from '@/types';
 import { expect } from '@jest/globals';
@@ -54,10 +54,10 @@ describe('EditorHeader', () => {
   describe('Edge Cases', () => {
     it('handles empty users array', () => {
       render(<EditorHeader {...defaultProps} users={[]} />);
-      
+
       const avatars = screen.queryAllByRole('img', { hidden: true });
       expect(avatars).toHaveLength(0);
-      
+
       const userList = document.querySelectorAll('.group');
       expect(userList.length).toBe(0);
     });
@@ -66,23 +66,23 @@ describe('EditorHeader', () => {
   describe('Performance', () => {
     it('renders efficiently', () => {
       const startTime = performance.now();
-      
+
       render(<EditorHeader {...defaultProps} />);
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(100); // Should render within 100ms
     });
 
     it('handles rapid re-renders efficiently', () => {
       const startTime = performance.now();
-      
+
       const { rerender } = render(<EditorHeader {...defaultProps} />);
       for (let i = 0; i < 100; i++) {
         rerender(<EditorHeader {...defaultProps} />);
       }
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(1000); // Should handle 100 re-renders within 1s
     });
   });
-}); 
+});

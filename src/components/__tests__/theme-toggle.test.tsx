@@ -25,6 +25,7 @@ describe('ThemeToggle', () => {
   });
 
   it('displays moon icon in dark mode', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
       theme: 'dark',
       setTheme: mockSetTheme,
@@ -36,6 +37,7 @@ describe('ThemeToggle', () => {
   });
 
   it('toggles theme when clicked', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
       theme: 'light',
       setTheme: mockSetTheme,
@@ -61,6 +63,7 @@ describe('ThemeToggle', () => {
   });
 
   describe('Theme Switching', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
       theme: 'light',
       setTheme: mockSetTheme,
@@ -73,6 +76,7 @@ describe('ThemeToggle', () => {
     });
 
     it('switches from dark to light theme', () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       jest.spyOn(require('next-themes'), 'useTheme').mockImplementation(() => ({
         theme: 'dark',
         setTheme: mockSetTheme,
@@ -88,24 +92,24 @@ describe('ThemeToggle', () => {
   describe('Performance', () => {
     it('handles theme switching efficiently', () => {
       const startTime = performance.now();
-      
+
       render(<ThemeToggle />);
       const button = screen.getByRole('button');
       fireEvent.click(button);
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(100); // Should switch within 100ms
     });
 
     it('handles icon transitions efficiently', () => {
       const startTime = performance.now();
-      
+
       render(<ThemeToggle />);
       const button = screen.getByRole('button');
       fireEvent.click(button);
-      
+
       const endTime = performance.now();
       expect(endTime - startTime).toBeLessThan(100); // Should transition within 100ms
     });
   });
-}); 
+});

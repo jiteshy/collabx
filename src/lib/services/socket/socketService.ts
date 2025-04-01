@@ -1,58 +1,48 @@
 import { Manager } from 'socket.io-client';
-import { MessageType, User, UserCursor, UserSelection } from '@/types';
-
-interface StoreHandlers {
-  setContent: (content: string) => void;
-  setLanguage: (language: string) => void;
-  setError: (error: string) => void;
-  resetEditor: () => void;
-  addUser: (user: User) => void;
-  removeUser: (userId: number) => void;
-  updateCursor: (cursor: UserCursor) => void;
-  updateSelection: (selection: UserSelection) => void;
-  resetUser: () => void;
-  onSessionFull: () => void;
-}
+import { MessageType } from '@/types';
+import type { SocketPayloads, SocketEvents, StoreHandlers, SocketConnectionState } from './types';
 
 export class SocketService {
   private socket: ReturnType<typeof Manager.prototype.socket> | null = null;
   private manager: ReturnType<typeof Manager> | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
-  private reconnectAttempts = 0;
-  private readonly maxReconnectAttempts = 5;
-  private isInitialConnection = true;
-  private isConnecting = false;
-  private isDisconnecting = false;
+  private connectionState: SocketConnectionState = {
+    reconnectAttempts: 0,
+    maxReconnectAttempts: 5,
+    isInitialConnection: true,
+    isConnecting: false,
+    isDisconnecting: false,
+  };
 
   constructor(
     private sessionId: string,
     private username: string,
     private onError: (message: string) => void,
-    private storeHandlers: StoreHandlers
+    private storeHandlers: StoreHandlers,
   ) {}
 
-  connect() {
-    if (this.socket?.connected || this.isConnecting || this.isDisconnecting) {
+  connect(): void {
+    if (
+      this.socket?.connected ||
+      this.connectionState.isConnecting ||
+      this.connectionState.isDisconnecting
+    ) {
       console.log('Socket already connected, connecting, or disconnecting, skipping connect');
       return;
     }
 
-    this.isConnecting = true;
+    this.connectionState.isConnecting = true;
     console.log('Attempting to connect socket...');
 
     try {
-      // Create new manager instance
       this.manager = new Manager({
         path: '/api/ws',
         query: { sessionId: this.sessionId },
-        reconnection: false, // We'll handle reconnection manually
+        reconnection: false,
         timeout: 20000,
       });
 
-      // Create new socket instance
       this.socket = this.manager.socket('/');
-
-      // Set up event listeners
       this.setupEventListeners();
     } catch (error) {
       console.error('Error creating socket connection:', error);
@@ -60,29 +50,42 @@ export class SocketService {
     }
   }
 
-  private setupEventListeners() {
+  private setupEventListeners(): void {
     if (!this.socket) return;
+
+    const events: SocketEvents = {
+      [MessageType.JOIN]: this.handleJoin.bind(this),
+      [MessageType.LEAVE]: this.handleLeave.bind(this),
+      [MessageType.CONTENT_CHANGE]: this.handleContentChange.bind(this),
+      [MessageType.LANGUAGE_CHANGE]: this.handleLanguageChange.bind(this),
+      [MessageType.USER_JOINED]: this.handleUserJoined.bind(this),
+      [MessageType.USER_LEFT]: this.handleUserLeft.bind(this),
+      [MessageType.CURSOR_MOVE]: this.handleCursorMove.bind(this),
+      [MessageType.SELECTION_CHANGE]: this.handleSelectionChange.bind(this),
+      [MessageType.ERROR]: this.handleError.bind(this),
+      [MessageType.UNDO_REDO_STACK]: this.handleUndoRedoStack.bind(this),
+      [MessageType.UNDO]: this.handleUndo.bind(this),
+      [MessageType.REDO]: this.handleRedo.bind(this),
+      [MessageType.SYNC_RESPONSE]: this.handleSyncResponse.bind(this),
+      [MessageType.SYNC_REQUEST]: this.handleSyncRequest.bind(this),
+    };
 
     this.socket.on('connect', this.handleConnect.bind(this));
     this.socket.on('disconnect', this.handleDisconnect.bind(this));
     this.socket.on('connect_error', this.handleConnectError.bind(this));
-    this.socket.on(MessageType.ERROR, this.handleError.bind(this));
-    this.socket.on(MessageType.SYNC_RESPONSE, this.handleSyncResponse.bind(this));
-    this.socket.on(MessageType.USER_JOINED, this.handleUserJoined.bind(this));
-    this.socket.on(MessageType.USER_LEFT, this.handleUserLeft.bind(this));
-    this.socket.on(MessageType.CONTENT_CHANGE, this.handleContentChange.bind(this));
-    this.socket.on(MessageType.LANGUAGE_CHANGE, this.handleLanguageChange.bind(this));
-    this.socket.on(MessageType.CURSOR_MOVE, this.handleCursorMove.bind(this));
-    this.socket.on(MessageType.SELECTION_CHANGE, this.handleSelectionChange.bind(this));
+
+    Object.entries(events).forEach(([event, handler]) => {
+      this.socket?.on(event, handler);
+    });
   }
 
-  disconnect() {
-    if (this.isDisconnecting) {
+  disconnect(): void {
+    if (this.connectionState.isDisconnecting) {
       console.log('Already disconnecting, skipping');
       return;
     }
 
-    this.isDisconnecting = true;
+    this.connectionState.isDisconnecting = true;
     console.log('Disconnecting socket...');
 
     if (this.reconnectTimeout) {
@@ -96,17 +99,19 @@ export class SocketService {
     }
 
     if (this.manager) {
-      // Remove all listeners from the manager
       this.manager.removeAllListeners();
       this.manager = null;
     }
 
-    this.reconnectAttempts = 0;
-    this.isConnecting = false;
-    this.isDisconnecting = false;
+    this.connectionState = {
+      ...this.connectionState,
+      reconnectAttempts: 0,
+      isConnecting: false,
+      isDisconnecting: false,
+    };
   }
 
-  sendMessage(type: MessageType, payload: { content: string }) {
+  sendMessage<T extends MessageType>(type: T, payload: SocketPayloads[T]): void {
     if (!this.socket?.connected) {
       console.warn('Socket not connected, message not sent');
       return;
@@ -114,46 +119,49 @@ export class SocketService {
     this.socket.emit(type, payload);
   }
 
-  private handleConnect() {
-    this.isConnecting = false;
-    this.reconnectAttempts = 0;
+  private handleConnect(): void {
+    this.connectionState.isConnecting = false;
+    this.connectionState.reconnectAttempts = 0;
 
-    if (this.isInitialConnection) {
+    if (this.connectionState.isInitialConnection) {
       this.socket?.emit(MessageType.JOIN, { username: this.username });
-      this.isInitialConnection = false;
+      this.connectionState.isInitialConnection = false;
     } else {
       this.socket?.emit(MessageType.SYNC_REQUEST);
     }
   }
 
-  private handleDisconnect() {
-    this.isConnecting = false;
+  private handleDisconnect(): void {
+    this.connectionState.isConnecting = false;
 
-    if (!this.isDisconnecting && this.reconnectAttempts < this.maxReconnectAttempts) {
-      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 5000);
+    if (
+      !this.connectionState.isDisconnecting &&
+      this.connectionState.reconnectAttempts < this.connectionState.maxReconnectAttempts
+    ) {
+      const delay = Math.min(1000 * Math.pow(2, this.connectionState.reconnectAttempts), 5000);
 
       this.reconnectTimeout = setTimeout(() => {
-        this.reconnectAttempts++;
+        this.connectionState.reconnectAttempts++;
         this.connect();
       }, delay);
-    } else if (!this.isDisconnecting) {
+    } else if (!this.connectionState.isDisconnecting) {
       this.onError('Failed to connect to server. Please refresh the page.');
       this.disconnect();
     }
   }
 
-  private handleConnectError(error: Error) {
+  private handleConnectError(error: Error): void {
     console.error('Socket.IO connection error:', error);
     this.handleConnectionError(error);
   }
 
-  private handleConnectionError(error: Error) {
-    this.isConnecting = false;
+  private handleConnectionError(error: Error): void {
+    this.connectionState.isConnecting = false;
     this.onError('Connection error occurred. Error: ' + error.message);
     this.disconnect();
   }
 
-  private handleError(payload: { message: string; type?: string }) {
+  private handleError(payload: SocketPayloads[MessageType.ERROR]): void {
     if (payload.type === 'SESSION_FULL') {
       this.storeHandlers.onSessionFull();
     } else if (payload.type === 'DUPLICATE_USERNAME') {
@@ -165,16 +173,16 @@ export class SocketService {
     }
   }
 
-  private handleSyncResponse(payload: { content: string; language: string; users: User[] }) {
+  private handleSyncResponse(payload: SocketPayloads[MessageType.SYNC_RESPONSE]): void {
     if (!payload) {
       this.onError('Invalid sync response received');
       return;
     }
 
-    if (this.isInitialConnection) {
+    if (this.connectionState.isInitialConnection) {
       this.storeHandlers.resetEditor();
       this.storeHandlers.resetUser();
-      this.isInitialConnection = false;
+      this.connectionState.isInitialConnection = false;
     }
 
     if (typeof payload.content === 'string') {
@@ -185,7 +193,7 @@ export class SocketService {
     }
 
     if (Array.isArray(payload.users)) {
-      payload.users.forEach(user => {
+      payload.users.forEach((user) => {
         if (user && typeof user.id === 'number' && typeof user.username === 'string') {
           this.storeHandlers.addUser(user);
         }
@@ -193,31 +201,31 @@ export class SocketService {
     }
   }
 
-  private handleUserJoined(payload: { user: User }) {
+  private handleUserJoined(payload: SocketPayloads[MessageType.USER_JOINED]): void {
     if (payload?.user) {
       this.storeHandlers.addUser(payload.user);
     }
   }
 
-  private handleUserLeft(payload: { user: User }) {
+  private handleUserLeft(payload: SocketPayloads[MessageType.USER_LEFT]): void {
     if (payload?.user?.id) {
       this.storeHandlers.removeUser(payload.user.id);
     }
   }
 
-  private handleContentChange(payload: { content: string; user: User }) {
+  private handleContentChange(payload: SocketPayloads[MessageType.CONTENT_CHANGE]): void {
     if (payload?.content) {
       this.storeHandlers.setContent(payload.content);
     }
   }
 
-  private handleLanguageChange(payload: { language: string; user: User }) {
+  private handleLanguageChange(payload: SocketPayloads[MessageType.LANGUAGE_CHANGE]): void {
     if (payload?.language) {
       this.storeHandlers.setLanguage(payload.language);
     }
   }
 
-  private handleCursorMove(payload: { position: { top: number; left: number }; user: User }) {
+  private handleCursorMove(payload: SocketPayloads[MessageType.CURSOR_MOVE]): void {
     if (payload?.position && payload?.user) {
       this.storeHandlers.updateCursor({
         userId: payload.user.id,
@@ -228,10 +236,7 @@ export class SocketService {
     }
   }
 
-  private handleSelectionChange(payload: {
-    selection: { start: number; end: number };
-    user: User;
-  }) {
+  private handleSelectionChange(payload: SocketPayloads[MessageType.SELECTION_CHANGE]): void {
     if (payload?.selection && payload?.user) {
       this.storeHandlers.updateSelection({
         userId: payload.user.id,
@@ -240,5 +245,30 @@ export class SocketService {
         selection: payload.selection,
       });
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private handleJoin(payload: SocketPayloads[MessageType.JOIN]): void {
+    // Implementation for join event
+  }
+
+  private handleLeave(): void {
+    // Implementation for leave event
+  }
+
+  private handleUndoRedoStack(): void {
+    // Implementation for undo/redo stack event
+  }
+
+  private handleUndo(): void {
+    // Implementation for undo event
+  }
+
+  private handleRedo(): void {
+    // Implementation for redo event
+  }
+
+  private handleSyncRequest(): void {
+    // Implementation for sync request event
   }
 }
