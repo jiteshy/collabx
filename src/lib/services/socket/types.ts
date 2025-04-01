@@ -9,7 +9,11 @@ export interface SocketPayloads {
   [MessageType.USER_LEFT]: { user: User };
   [MessageType.CURSOR_MOVE]: { position: { top: number; left: number }; user: User };
   [MessageType.SELECTION_CHANGE]: { selection: { start: number; end: number }; user: User };
-  [MessageType.ERROR]: { message: string; type?: 'SESSION_FULL' | 'DUPLICATE_USERNAME' };
+  [MessageType.ERROR]: {
+    type: SocketErrorType;
+    message: string;
+    details?: unknown;
+  };
   [MessageType.UNDO_REDO_STACK]: never;
   [MessageType.UNDO]: never;
   [MessageType.REDO]: never;
@@ -47,10 +51,36 @@ export interface StoreHandlers {
   onSessionFull: () => void;
 }
 
-export type SocketConnectionState = {
-  isConnecting: boolean;
-  isDisconnecting: boolean;
-  isInitialConnection: boolean;
+export type SocketErrorType =
+  | 'SESSION_FULL'
+  | 'DUPLICATE_USERNAME'
+  | 'CONNECTION_ERROR'
+  | 'SYNC_ERROR'
+  | 'INVALID_PAYLOAD'
+  | 'SERVER_ERROR'
+  | 'TIMEOUT_ERROR'
+  | 'NETWORK_ERROR';
+
+export interface SocketError {
+  type: SocketErrorType;
+  message: string;
+  code?: number;
+  details?: unknown;
+}
+
+export interface ErrorRecoveryOptions {
+  maxRetries: number;
+  retryDelay: number;
+  backoffFactor: number;
+  maxRetryDelay: number;
+}
+
+export interface SocketConnectionState {
   reconnectAttempts: number;
   maxReconnectAttempts: number;
-};
+  isInitialConnection: boolean;
+  isConnecting: boolean;
+  isDisconnecting: boolean;
+  lastError?: SocketError;
+  lastSuccessfulConnection?: Date;
+}

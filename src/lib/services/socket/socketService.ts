@@ -1,7 +1,22 @@
 import { Manager } from 'socket.io-client';
 import { MessageType } from '@/types';
-import type { SocketPayloads, SocketEvents, StoreHandlers, SocketConnectionState } from './types';
+import type {
+  SocketPayloads,
+  SocketEvents,
+  StoreHandlers,
+  SocketConnectionState,
+  SocketError,
+  ErrorRecoveryOptions,
+  SocketErrorType,
+} from './types';
 import { NotificationService } from '../notification/notificationService';
+
+const DEFAULT_ERROR_RECOVERY_OPTIONS: ErrorRecoveryOptions = {
+  maxRetries: 5,
+  retryDelay: 1000,
+  backoffFactor: 2,
+  maxRetryDelay: 5000,
+};
 
 export class SocketService {
   private socket: ReturnType<typeof Manager.prototype.socket> | null = null;
@@ -9,7 +24,7 @@ export class SocketService {
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private connectionState: SocketConnectionState = {
     reconnectAttempts: 0,
-    maxReconnectAttempts: 5,
+    maxReconnectAttempts: DEFAULT_ERROR_RECOVERY_OPTIONS.maxRetries,
     isInitialConnection: true,
     isConnecting: false,
     isDisconnecting: false,
@@ -20,6 +35,7 @@ export class SocketService {
     private username: string,
     private onError: (message: string) => void,
     private storeHandlers: StoreHandlers,
+    private errorRecoveryOptions: ErrorRecoveryOptions = DEFAULT_ERROR_RECOVERY_OPTIONS,
   ) {}
 
   connect(): void {
@@ -123,6 +139,8 @@ export class SocketService {
   private handleConnect(): void {
     this.connectionState.isConnecting = false;
     this.connectionState.reconnectAttempts = 0;
+    this.connectionState.lastSuccessfulConnection = new Date();
+    this.connectionState.lastError = undefined;
 
     if (this.connectionState.isInitialConnection) {
       this.socket?.emit(MessageType.JOIN, { username: this.username });
@@ -157,21 +175,115 @@ export class SocketService {
   }
 
   private handleConnectionError(error: Error): void {
+    const socketError: SocketError = {
+      type: 'CONNECTION_ERROR',
+      message: error.message,
+      details: error,
+    };
+
+    this.connectionState.lastError = socketError;
     this.connectionState.isConnecting = false;
-    this.onError('Connection error occurred. Error: ' + error.message);
+
+    console.error('Socket connection error:', {
+      error: socketError,
+      connectionState: this.connectionState,
+      timestamp: new Date().toISOString(),
+    });
+
+    this.onError(`Connection error: ${error.message}`);
+    this.attemptErrorRecovery();
+  }
+
+  private attemptErrorRecovery(): void {
+    if (this.connectionState.reconnectAttempts >= this.errorRecoveryOptions.maxRetries) {
+      this.handleMaxRetriesExceeded();
+      return;
+    }
+
+    const delay = this.calculateRetryDelay();
+    console.log(
+      `Attempting recovery in ${delay}ms (attempt ${this.connectionState.reconnectAttempts + 1}/${this.errorRecoveryOptions.maxRetries})`,
+    );
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.connectionState.reconnectAttempts++;
+      this.connect();
+    }, delay);
+  }
+
+  private calculateRetryDelay(): number {
+    const { retryDelay, backoffFactor, maxRetryDelay } = this.errorRecoveryOptions;
+    const delay = Math.min(
+      retryDelay * Math.pow(backoffFactor, this.connectionState.reconnectAttempts),
+      maxRetryDelay,
+    );
+    return delay;
+  }
+
+  private handleMaxRetriesExceeded(): void {
+    const error: SocketError = {
+      type: 'CONNECTION_ERROR',
+      message: 'Maximum reconnection attempts exceeded',
+      details: this.connectionState.lastError,
+    };
+
+    console.error('Max retries exceeded:', {
+      error,
+      connectionState: this.connectionState,
+      timestamp: new Date().toISOString(),
+    });
+
+    this.onError(
+      'Failed to establish connection after multiple attempts. Please refresh the page.',
+    );
     this.disconnect();
   }
 
   private handleError(payload: SocketPayloads[MessageType.ERROR]): void {
-    if (payload.type === 'SESSION_FULL') {
-      this.storeHandlers.onSessionFull();
-    } else if (payload.type === 'DUPLICATE_USERNAME') {
-      this.onError('Username is already taken. Please choose a different username.');
-      this.storeHandlers.setError('Username is already taken. Please choose a different username.');
-    } else {
-      this.onError(payload.message);
-      this.storeHandlers.setError(payload.message);
+    const error: SocketError = {
+      type: payload.type as SocketErrorType,
+      message: payload.message,
+      details: payload,
+    };
+
+    this.connectionState.lastError = error;
+
+    console.error('Socket error received:', {
+      error,
+      connectionState: this.connectionState,
+      timestamp: new Date().toISOString(),
+    });
+
+    switch (payload.type) {
+      case 'SESSION_FULL':
+        this.storeHandlers.onSessionFull();
+        break;
+      case 'DUPLICATE_USERNAME':
+        this.onError('Username is already taken. Please choose a different username.');
+        this.storeHandlers.setError(
+          'Username is already taken. Please choose a different username.',
+        );
+        break;
+      case 'SYNC_ERROR':
+        this.handleSyncError();
+        break;
+      case 'INVALID_PAYLOAD':
+        this.handleInvalidPayloadError();
+        break;
+      default:
+        this.onError(payload.message);
+        this.storeHandlers.setError(payload.message);
     }
+  }
+
+  private handleSyncError(): void {
+    console.warn('Sync error occurred, requesting full sync');
+    this.socket?.emit(MessageType.SYNC_REQUEST);
+  }
+
+  private handleInvalidPayloadError(): void {
+    console.warn('Invalid payload received, requesting state refresh');
+    this.socket?.emit(MessageType.SYNC_REQUEST);
   }
 
   private handleSyncResponse(payload: SocketPayloads[MessageType.SYNC_RESPONSE]): void {

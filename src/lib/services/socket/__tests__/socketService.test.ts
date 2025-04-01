@@ -322,9 +322,7 @@ describe('SocketService', () => {
 
       const error = new Error('Connection error');
       mockHandler(error);
-      expect(mockOnError).toHaveBeenCalledWith(
-        'Connection error occurred. Error: Connection error',
-      );
+      expect(mockOnError).toHaveBeenCalledWith('Connection error: Connection error');
     });
 
     it('prevents multiple simultaneous connection attempts', () => {
@@ -388,7 +386,85 @@ describe('SocketService', () => {
 
       const error = new Error('Network error');
       mockHandler(error);
-      expect(mockOnError).toHaveBeenCalledWith('Connection error occurred. Error: Network error');
+      expect(mockOnError).toHaveBeenCalledWith('Connection error: Network error');
+    });
+
+    it('handles connection error with retry mechanism', () => {
+      setupConnection();
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'connect_error',
+      )[1];
+
+      const error = new Error('Connection failed');
+      mockHandler(error);
+
+      expect(mockOnError).toHaveBeenCalledWith('Connection error: Connection failed');
+      expect(socketService['connectionState'].lastError).toBeDefined();
+      expect(socketService['connectionState'].lastError?.type).toBe('CONNECTION_ERROR');
+      expect(socketService['connectionState'].lastError?.message).toBe('Connection failed');
+    });
+
+    it('handles sync error by requesting full sync', () => {
+      setupConnection();
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.ERROR,
+      )[1];
+
+      mockHandler({
+        type: 'SYNC_ERROR',
+        message: 'Sync failed',
+      });
+
+      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.SYNC_REQUEST);
+    });
+
+    it('handles invalid payload error by requesting state refresh', () => {
+      setupConnection();
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === MessageType.ERROR,
+      )[1];
+
+      mockHandler({
+        type: 'INVALID_PAYLOAD',
+        message: 'Invalid payload received',
+      });
+
+      expect(mockSocket.emit).toHaveBeenCalledWith(MessageType.SYNC_REQUEST);
+    });
+
+    it('handles max retries exceeded', () => {
+      setupConnection();
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'connect_error',
+      )[1];
+
+      // Simulate max retries exceeded
+      socketService['connectionState'].reconnectAttempts = 5;
+      const error = new Error('Connection failed');
+      mockHandler(error);
+
+      expect(mockOnError).toHaveBeenCalledWith(
+        'Failed to establish connection after multiple attempts. Please refresh the page.',
+      );
+      expect(mockSocket.disconnect).toHaveBeenCalled();
+    });
+
+    it('updates connection state on successful connection', () => {
+      setupConnection();
+      const mockHandler = mockSocket.on.mock.calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any[]) => call[0] === 'connect',
+      )[1];
+
+      mockHandler();
+
+      expect(socketService['connectionState'].reconnectAttempts).toBe(0);
+      expect(socketService['connectionState'].lastError).toBeUndefined();
+      expect(socketService['connectionState'].lastSuccessfulConnection).toBeDefined();
     });
   });
 
