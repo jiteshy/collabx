@@ -59,7 +59,6 @@ alwaysApply: false
 8. [ ] Enhance security
    - Implement rate limiting
    - Add input validation
-   - Set up authentication system
    - Status: Pending
 
 9. [x] Improve error handling

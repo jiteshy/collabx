@@ -25,12 +25,12 @@ export function EditorHeader({
   setLanguage,
 }: EditorHeaderProps) {
   return (
-    <div className="px-4 lg:px-6 h-12 lg:h-14 flex items-center justify-between">
+    <div className="pr-4 lg:pr-6 pl-12 h-12 flex items-center justify-between">
       {readOnly ? (
         <div className="text-zinc-600 dark:text-zinc-400 text-xs">In Read-Only Mode</div>
       ) : (
         <Select value={language} onValueChange={setLanguage}>
-          <SelectTrigger className="w-[140px] lg:w-[180px] border-zinc-400 dark:border-zinc-600">
+          <SelectTrigger className="w-[140px] lg:w-[180px] !h-8 border-zinc-400 dark:border-zinc-600 dark:text-zinc-300">
             <SelectValue placeholder="Select language" />
           </SelectTrigger>
           <SelectContent>
