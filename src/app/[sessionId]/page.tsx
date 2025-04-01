@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MonacoEditor } from '@/components/MonacoEditor';
+import { MonacoEditor } from '@/components/monaco-editor';
 import { useEditorStore, useUserStore } from '@/lib/stores';
 import { getRandomUsername } from '@/lib/utils';
 import { toast } from 'sonner';
-import { SessionCard } from '@/components/SessionCard';
-import { Header } from '@/components/Header';
-import { HeroSection } from '@/components/HeroSection';
-import { EditorHeader } from '@/components/EditorHeader';
+import { SessionCard } from '@/components/session-card';
+import { Header } from '@/components/nav';
+import { HeroSection } from '@/components/hero-section';
+import { EditorHeader } from '@/components/editor-header';
 import { Footer } from '@/components/Footer';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { SessionFullDialog } from '@/components/ui/SessionFullDialog';
+import { SessionFullDialog } from '@/components/session-full-dialog';
 import { useTheme } from 'next-themes';
 export default function SessionPage() {
   const params = useParams();
@@ -49,7 +49,7 @@ export default function SessionPage() {
         copySessionLink();
       }
 
-      // Toggle Dark Mode: Cmd/Ctrl + Shift + D
+      // Toggle Dark Mode: Cmd/Ctrl + Shift + L
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'l') {
         event.preventDefault();
         setTheme(theme === 'dark' ? 'light' : 'dark');

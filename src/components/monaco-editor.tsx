@@ -8,7 +8,7 @@ import { useEditorStore } from '@/lib/stores';
 import { DEFAULT_CONTENT, DEFAULT_LANGUAGE } from '@/lib/utils';
 import { MessageType } from '@/types';
 import { useTheme } from 'next-themes';
-import { EditorShimmer } from './EditorShimmer';
+import { EditorShimmer } from './editor-shimmer';
 
 // Dynamically import Monaco editor
 const Editor = dynamic(() => import('@monaco-editor/react').then((mod) => mod.Editor), {

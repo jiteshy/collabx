@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MonacoEditor } from '../MonacoEditor';
+import { MonacoEditor } from '../monaco-editor';
 import { MessageType } from '@/types';
 import { act } from 'react-dom/test-utils';
 

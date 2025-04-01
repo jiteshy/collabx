@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { EditorHeader } from '../EditorHeader';
+import { EditorHeader } from '../editor-header';
 import { User } from '@/types';
 import { expect } from '@jest/globals';
 

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SessionCard } from '../SessionCard';
+import { SessionCard } from '../session-card';
 import { User } from '@/types';
 import { expect } from '@jest/globals';
 
