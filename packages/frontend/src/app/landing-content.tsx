@@ -1,6 +1,6 @@
-import { Code2, Copy, Share2, Users, Circle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Users, Circle } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Brand, BrandWordmark } from '@/components/brand';
 
 export function LandingContent() {
   return (
@@ -12,12 +12,7 @@ export function LandingContent() {
             {/* Header */}
             <div className="p-4 lg:pl-6 border-b border-slate-700/50">
               <div className="flex justify-between">
-                <div className="flex items-center space-x-2">
-                  <Code2 className="h-8 w-8 lg:h-10 lg:w-10 text-white bg-gradient-to-r from-orange-600 to-orange-400 rounded-full p-1" />
-                  <span className="text-2xl lg:text-4xl -mt-1 lg:-mt-2 text-white font-light bg-clip-text">
-                    KodeCollab
-                  </span>
-                </div>
+                <Brand compact />
                 <ThemeToggle />
               </div>
             </div>
@@ -119,7 +114,7 @@ export function LandingContent() {
                   </div>
                   <div className="flex">
                     <span className="text-zinc-500 w-8 text-right mr-4">4</span>
-                    <span className="ml-4"><span className="text-purple-400">return</span> <span className="text-green-300">`Welcome to KodeCollab, ${'{'}{'{'}name{'}'}{'}'}`</span><span className="text-yellow-300">;</span></span>
+                    <span className="ml-4"><span className="text-purple-400">return</span> <span className="text-green-300">`Welcome to kodecollab, ${'{'}{'{'}name{'}'}{'}'}`</span><span className="text-yellow-300">;</span></span>
                   </div>
                   <div className="flex">
                     <span className="text-zinc-500 w-8 text-right mr-4">5</span>
@@ -152,7 +147,7 @@ export function LandingContent() {
       <div className="w-full lg:absolute bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 lg:from-transparent lg:via-transparent lg:to-transparent bottom-0 px-4 lg:px-6 pt-1 pb-2">
         <div className="flex justify-between items-center text-xs lg:text-sm text-slate-300">
           <span>
-            © {new Date().getFullYear()} KodeCollab - Real-time Collaborative Code Editor
+            © {new Date().getFullYear()} <BrandWordmark className="text-xs lg:text-sm font-semibold align-baseline" /> - Real-time Collaborative Code Editor
           </span>
           
           <div className="lg:flex items-center justify-center hidden">
@@ -170,7 +165,7 @@ export function LandingContent() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "KodeCollab",
+            "name": "kodecollab",
             "applicationCategory": "DeveloperApplication",
             "description": "Professional online collaborative code editor for real-time pair programming and team development. Free collaborative coding platform with instant sessions, syntax highlighting for 20+ languages, and live cursor tracking. No sign-up required.",
             "url": "https://kodecollab.com",
@@ -192,7 +187,7 @@ export function LandingContent() {
             "keywords": "online collaborative editor, collaborative code editor, pair programming, real-time coding, online code editor, collaborative programming, free code editor, team coding, remote programming",
             "author": {
               "@type": "Organization",
-              "name": "KodeCollab Team"
+              "name": "kodecollab team"
             }
           })
         }}

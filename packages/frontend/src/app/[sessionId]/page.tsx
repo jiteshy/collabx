@@ -56,8 +56,8 @@ export default function SessionPage() {
     
     if (navigator.share) {
       navigator.share({
-        title: 'KodeCollab Session',
-        text: 'Join my collaborative editing session on KodeCollab',
+        title: 'kodecollab session',
+        text: 'Join my collaborative editing session on kodecollab',
         url: url
       }).catch((error) => {
         console.error('Error sharing:', error);
