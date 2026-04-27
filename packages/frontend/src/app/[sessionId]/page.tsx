@@ -25,8 +25,14 @@ export default function SessionPage() {
   const users = useUserStore((state) => state.users);
   const [isInvalidSession, setIsInvalidSession] = useState(false);
   const { sendMessage, isSessionFull, setIsSessionFull } = useWebSocket(sessionId, username || '');
-  const { setTheme, theme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const typingUsers = useUserStore((state) => state.typingUsers);
+
+  const matchesShortcut = useCallback((event: KeyboardEvent, code: string) => {
+    const usesAlt = event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey;
+    const usesPrimaryShift = (event.metaKey || event.ctrlKey) && event.shiftKey;
+    return event.code === code && (usesAlt || usesPrimaryShift);
+  }, []);
 
   useEffect(() => {
     const randomUsername = getRandomUsername();
@@ -69,28 +75,33 @@ export default function SessionPage() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Copy Session Link: Cmd/Ctrl + Shift + C
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'c') {
+      // Copy Session Link: Alt/Option + C or Cmd/Ctrl + Shift + C
+      if (matchesShortcut(event, 'KeyC')) {
         event.preventDefault();
         copySessionLink();
+        return;
       }
 
-      // Share Session Link: Cmd/Ctrl + Shift + S
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 's') {
+      // Share Session Link: Alt/Option + S or Cmd/Ctrl + Shift + S
+      if (matchesShortcut(event, 'KeyS')) {
         event.preventDefault();
         shareSessionLink();
+        return;
       }
 
-      // Toggle Dark Mode: Cmd/Ctrl + Shift + L
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'l') {
+      // Toggle Theme: Alt/Option + T or Cmd/Ctrl + Shift + L
+      if (
+        (event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey && event.code === 'KeyT') ||
+        ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyL')
+      ) {
         event.preventDefault();
-        setTheme(theme === 'dark' ? 'light' : 'dark');
+        setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copySessionLink, shareSessionLink, setTheme, theme]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [copySessionLink, matchesShortcut, resolvedTheme, setTheme, shareSessionLink]);
 
   if (!username) {
     return null;

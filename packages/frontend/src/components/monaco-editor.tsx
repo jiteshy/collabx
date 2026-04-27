@@ -112,15 +112,18 @@ export function MonacoEditor({ sendMessage, readOnly = false, username }: Monaco
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Jump to Editor: Cmd/Ctrl + Shift + E
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'e') {
+      const usesAlt = event.altKey && !event.metaKey && !event.ctrlKey && !event.shiftKey;
+      const usesPrimaryShift = (event.metaKey || event.ctrlKey) && event.shiftKey;
+
+      // Jump to Editor: Alt/Option + E or Cmd/Ctrl + Shift + E
+      if ((usesAlt || usesPrimaryShift) && event.code === 'KeyE') {
         event.preventDefault();
         focusEditor();
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [focusEditor]);
 
   const handleEditorDidMount = useCallback((editor: MonacoEditorType.IStandaloneCodeEditor) => {

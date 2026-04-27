@@ -11,36 +11,39 @@ export function Footer() {
         
         <div className="lg:flex items-center justify-center hidden">
           <div className="text-xs text-zinc-400 flex items-center">
-            <span className="font-medium">⌘/Ctrl + ⇧/Shift +</span>
             <div className="flex ml-2 space-x-3">
               <div className="flex items-center">
                 <div className="flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-700">
+                  <span className="text-zinc-800 dark:text-zinc-400 mr-1.5 font-medium">⌥/Alt</span>
                   <Share2 className="h-3 w-3 mr-1 text-zinc-800 dark:text-zinc-400" />
-                  <span className='text-zinc-800 dark:text-zinc-400'>S</span>
+                  <span className="text-zinc-800 dark:text-zinc-400">S</span>
                 </div>
                 <span className="ml-1.5 text-zinc-400">Share Session</span>
               </div>
             
               <div className="flex items-center">
                 <div className="flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-700">
+                  <span className="text-zinc-800 dark:text-zinc-400 mr-1.5 font-medium">⌥/Alt</span>
                   <Command className="h-3 w-3 mr-1 text-zinc-800 dark:text-zinc-400" />
-                  <span className='text-zinc-800 dark:text-zinc-400'>C</span>
+                  <span className="text-zinc-800 dark:text-zinc-400">C</span>
                 </div>
                 <span className="ml-1.5 text-zinc-400">Copy Session</span>
               </div>
               
               <div className="flex items-center">
                 <div className="flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-700">
+                  <span className="text-zinc-800 dark:text-zinc-400 mr-1.5 font-medium">⌥/Alt</span>
                   <Sun className="h-3 w-3 mr-1 text-zinc-800 dark:text-zinc-400" />
-                  <span className='text-zinc-800 dark:text-zinc-400'>L</span>
+                  <span className="text-zinc-800 dark:text-zinc-400">T</span>
                 </div>
                 <span className="ml-1.5 text-zinc-400">Theme</span>
               </div>
               
               <div className="flex items-center">
                 <div className="flex items-center px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-700">
+                  <span className="text-zinc-800 dark:text-zinc-400 mr-1.5 font-medium">⌥/Alt</span>
                   <Pencil className="h-3 w-3 mr-1 text-zinc-800 dark:text-zinc-400" />
-                  <span className='text-zinc-800 dark:text-zinc-400'>E</span>
+                  <span className="text-zinc-800 dark:text-zinc-400">E</span>
                 </div>
                 <span className="ml-1.5 text-zinc-400">Jump to Editor</span>
               </div>
